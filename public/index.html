@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2-Player Room</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>2-Player Room</h1>
+    <button id="createRoom">Create Room</button>
+    <input type="text" id="roomId" placeholder="Enter Room ID" />
+    <button id="joinRoom">Join Room</button>
+    <p id="status"></p>
+
+    <script>
+        const socket = io();
+        const status = document.getElementById("status");
+
+        document.getElementById("createRoom").addEventListener("click", () => {
+            socket.emit("create-room");
+        });
+
+        socket.on("room-created", (roomId) => {
+            status.textContent = `Room Created! ID: ${roomId}`;
+            document.getElementById("roomId").value = roomId;
+        });
+
+        document.getElementById("joinRoom").addEventListener("click", () => {
+            const roomId = document.getElementById("roomId").value;
+            if (roomId) {
+                socket.emit("join-room", roomId);
+            }
+        });
+
+        socket.on("player-joined", (players) => {
+            status.textContent = `Players in room: ${players.length}/2`;
+        });
+
+        socket.on("room-full", () => {
+            status.textContent = "Room is full!";
+        });
+    </script>
+</body>
+</html>
