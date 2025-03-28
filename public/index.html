@@ -3,31 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2-Player Room</title>
+    <title>Card Chess</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #fff;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.3s;
+            margin: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        input {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            margin: 10px;
+            width: 200px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #status {
+            font-size: 18px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+
+        #gameBoard {
+            margin: 20px auto;
+            max-width: 600px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+
+        .room-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .player-indicator {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* Add animation for status updates */
+        @keyframes statusUpdate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .status-update {
+            animation: statusUpdate 0.3s ease;
+        }
     </style>
 </head>
 <body>
-    <h1>2-Player Room</h1>
-    <button id="createRoom">Create Room</button>
-    <input type="text" id="roomId" placeholder="Enter Room ID" />
-    <button id="joinRoom">Join Room</button>
-    <p id="status"></p>
+    <div class="container">
+        <h1>Card Chess</h1>
+        <div class="controls">
+            <div class="room-info">
+                <button id="createRoom">Create Room</button>
+                <input type="text" id="roomId" placeholder="Enter Room ID" />
+                <button id="joinRoom">Join Room</button>
+            </div>
+            <p id="status"></p>
+            <div class="player-indicator" id="playerIndicator"></div>
+        </div>
+        <div id="gameBoard" style="display: none;"></div>
+    </div>
 
     <script>
         const socket = io();
         const status = document.getElementById("status");
+        let board = null;
+        let game = new Chess();
+        let playerColor = 'white';
+        let selectedSquare = null;
+
+        function initializeBoard() {
+            const config = {
+                position: 'start',
+                orientation: playerColor,
+                draggable: false,
+                pieceTheme: (piece) => {
+                    const color = piece.charAt(0) === 'w' ? '-w' : '-b';
+                    const pieceType = getPieceType(piece.charAt(1));
+                    return `/svgs/${pieceType}${color}.svg`;
+                }
+            };
+            board = Chessboard('gameBoard', config);
+
+            $('.square-55d63').on('click', function() {
+                const square = $(this).data('square');
+                handleSquareClick(square);
+            });
+        }
+
+        function getPieceType(piece) {
+            const pieceTypes = {
+                'P': 'pawn',
+                'N': 'knight',
+                'B': 'bishop',
+                'R': 'rook',
+                'Q': 'queen',
+                'K': 'king'
+            };
+            return pieceTypes[piece];
+        }
+
+        function handleSquareClick(square) {
+            if ((game.turn() === 'w' && playerColor !== 'white') ||
+                (game.turn() === 'b' && playerColor !== 'black')) {
+                return;
+            }
+
+            const piece = game.get(square);
+            const isMyPiece = piece && ((piece.color === 'w' && playerColor === 'white') ||
+                                      (piece.color === 'b' && playerColor === 'black'));
+
+            // If clicking a new piece of your color
+            if (isMyPiece) {
+                selectedSquare = square;
+                removeHighlights();
+                $(`[data-square="${square}"]`).addClass('highlight-square');
+                showPossibleMoves(square);
+                return;
+            }
+
+            // If a piece is selected and clicking a destination
+            if (selectedSquare) {
+                const move = game.move({
+                    from: selectedSquare,
+                    to: square,
+                    promotion: 'q'
+                });
+
+                if (move !== null) {
+                    socket.emit('move', {
+                        source: selectedSquare,
+                        target: square,
+                        roomId: document.getElementById("roomId").value,
+                        fen: game.fen()
+                    });
+                    board.position(game.fen(), false);
+                }
+                removeHighlights();
+                selectedSquare = null;
+            }
+        }
+
+        function showPossibleMoves(square) {
+            const moves = game.moves({
+                square: square,
+                verbose: true
+            });
+
+            moves.forEach(move => {
+                $(`[data-square="${move.to}"]`).addClass('possible-move');
+            });
+        }
+
+        function removeHighlights() {
+            $('.highlight-square').removeClass('highlight-square');
+            $('.possible-move').removeClass('possible-move');
+        }
+
+        const style = document.createElement('style');
+        style.textContent = `
+            /* Selected piece highlight */
+            .highlight-square {
+                box-shadow: inset 0 0 0 4px rgba(78, 165, 255, 0.8) !important;
+            }
+
+            /* Possible moves highlight */
+            .possible-move {
+                position: relative;
+            }
+            .possible-move::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 24px;
+                height: 24px;
+                background: rgba(0, 0, 0, 0.12);
+                border: 2px solid rgba(255, 255, 255, 0.5);
+                border-radius: 50%;
+                z-index: 1;
+            }
+
+            /* Capture moves */
+            .possible-move:has(.piece-417db)::before {
+                width: 90%;
+                height: 90%;
+                background: none;
+                border: 3px solid rgba(255, 59, 59, 0.75);
+            }
+
+            /* Dark square adjustments */
+            .black-3c85d .possible-move::before {
+                background: rgba(255, 255, 255, 0.15);
+                border-color: rgba(255, 255, 255, 0.6);
+            }
+        `;
+        document.head.appendChild(style);
 
         document.getElementById("createRoom").addEventListener("click", () => {
             socket.emit("create-room");
         });
 
         socket.on("room-created", (roomId) => {
-            status.textContent = `Room Created! ID: ${roomId}`;
-            document.getElementById("roomId").value = roomId;
+            updateStatus(`Room Created! ID: ${roomId}`);
+            const roomInput = document.getElementById("roomId");
+            roomInput.value = roomId;
+            roomInput.setAttribute("data-created-room", roomId);
+            document.getElementById("playerIndicator").textContent = "Waiting for opponent...";
+            document.getElementById("createRoom").disabled = true;
         });
 
         document.getElementById("joinRoom").addEventListener("click", () => {
@@ -38,12 +301,36 @@
         });
 
         socket.on("player-joined", (players) => {
-            status.textContent = `Players in room: ${players.length}/2`;
+            console.log("Player joined, my socket id:", socket.id);
+            console.log("Players in room:", players);
+            updateStatus(`Players in room: ${players.length}/2`);
+            if (players.length === 2) {
+                document.getElementById("gameBoard").style.display = "block";
+                playerColor = players[0] === socket.id ? 'white' : 'black';
+                document.getElementById("playerIndicator").textContent = `You are playing as ${playerColor}`;
+                game = new Chess();
+                initializeBoard();
+                console.log("Board initialized for", playerColor);
+            }
         });
 
         socket.on("room-full", () => {
-            status.textContent = "Room is full!";
+            updateStatus("Room is full!");
         });
+
+        socket.on("opponent-move", ({ source, target, fen }) => {
+            console.log("Received opponent move:", source, "to", target);
+            game.load(fen);
+            board.position(fen, false);
+            removeHighlights();
+        });
+
+        // Update the status display with animation
+        function updateStatus(message) {
+            status.textContent = message;
+            status.classList.add('status-update');
+            setTimeout(() => status.classList.remove('status-update'), 300);
+        }
     </script>
 </body>
 </html>

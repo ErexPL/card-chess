@@ -12,7 +12,7 @@ const rooms = {}; // Store rooms and players
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
-    res.send("Server is running...");
+    res.sendFile(__dirname + '/public/index.html');
 });
 
 io.on("connection", (socket) => {
@@ -27,6 +27,12 @@ io.on("connection", (socket) => {
     });
 
     socket.on("join-room", (roomId) => {
+        // Check if player is already in the room
+        if (rooms[roomId] && rooms[roomId].includes(socket.id)) {
+            socket.emit("join-error", "You cannot join your own room!");
+            return;
+        }
+
         if (rooms[roomId] && rooms[roomId].length < 2) {
             rooms[roomId].push(socket.id);
             socket.join(roomId);
@@ -34,6 +40,13 @@ io.on("connection", (socket) => {
             console.log(`${socket.id} joined room ${roomId}`);
         } else {
             socket.emit("room-full", roomId);
+        }
+    });
+
+    socket.on("move", ({ source, target, roomId, fen }) => {
+        if (rooms[roomId]) {
+            io.in(roomId).emit("opponent-move", { source, target, fen });
+            console.log(`Move from ${source} to ${target} in room ${roomId}`);
         }
     });
 
