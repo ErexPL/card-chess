@@ -1,6 +1,5 @@
 const express = require("express");
 const http = require("http");
-const { v4: uuidv4 } = require("uuid");
 const socketIo = require("socket.io");
 
 const app = express();
@@ -98,7 +97,6 @@ io.on("connection", (socket) => {
         console.log("A user disconnected:", socket.id);
     });
 
-    // Add this handler for reconnection attempts
     socket.on("rejoin-game", (roomId) => {
         if (rooms[roomId] && rooms[roomId].includes(socket.id)) {
             socket.join(roomId);
@@ -109,7 +107,6 @@ io.on("connection", (socket) => {
         }
     });
 
-    // Update the join-game handler
     socket.on("join-game", (roomId) => {
         console.log(`Player ${socket.id} joining game in room ${roomId}`);
         if (!rooms[roomId]) {
@@ -135,13 +132,11 @@ io.on("connection", (socket) => {
 
     socket.on('leave-room', (lobbyCode) => {
         if (rooms[lobbyCode]) {
-            // Remove the player from the room
             const index = rooms[lobbyCode].indexOf(socket.id);
             if (index > -1) {
                 rooms[lobbyCode].splice(index, 1);
             }
-            
-            // If room is empty, delete it
+        
             if (rooms[lobbyCode].length === 0) {
                 delete rooms[lobbyCode];
                 delete gameStates[lobbyCode];

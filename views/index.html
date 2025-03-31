@@ -8,35 +8,23 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="container">
-        <div class="main-menu">
-            <div class="menu-header">
-                <h1>Card Chess</h1>
-                <p class="subtitle">The better version of chess</p>
+    <div class="main-menu">
+        <div class="menu-header">
+            <h1>Card Chess</h1>
+            <p class="subtitle">The better version of chess</p>
+        </div>
+        <div class="menu-options">
+            <div class="option-group">
+                <button id="createLobby">Create Private Room</button>
+                <button disabled>Quick Match</button>
             </div>
-            <div class="menu-options">
-                <div class="option-group">
-                    <button id="createLobby" class="primary-button">
-                        <span class="button-text">Create Private Room</span>
-                    </button>
-                    <button id="matchmaking" class="secondary-button" disabled>
-                        <span class="button-text">Quick Match</span>
-                    </button>
+            <span class="divider">OR</span>
+            <div class="option-group">
+                <div class="code-container">
+                    <input type="text" id="lobbyCode" placeholder="Enter room code" maxlength="8" />
+                    <button id="copyCode" style="display: none;">Copy</button>
                 </div>
-                
-                <div class="divider">
-                    <span>OR</span>
-                </div>
-
-                <div class="option-group">
-                    <div class="code-container">
-                        <input type="text" id="lobbyCode" placeholder="Enter room code" maxlength="8" />
-                        <button id="copyCode" class="icon-button" style="display: none;">Copy</button>
-                    </div>
-                    <button id="joinLobby" class="primary-button">
-                        <span class="button-text">Join Room</span>
-                    </button>
-                </div>
+                <button id="joinLobby">Join Room</button>
             </div>
         </div>
     </div>
