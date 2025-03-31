@@ -61,10 +61,6 @@ socket.on('start-game', (data) => {
     window.location.href = `/game?room=${data.roomId}`;
 });
 
-socket.on('join-success', (roomId) => {
-    document.getElementById('status').textContent = 'Waiting for opponent...';
-});
-
 socket.on('room-full', () => {
     alert('This room is full!');
 });
