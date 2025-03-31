@@ -12,7 +12,7 @@ const rooms = {}; // Store rooms and players
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
-    res.sendFile(__dirname + '/public/index.html');
+    res.sendFile(__dirname + '/views/index.html');
 });
 
 io.on("connection", (socket) => {
