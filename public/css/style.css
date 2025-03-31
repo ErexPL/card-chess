@@ -63,6 +63,8 @@ h1 {
 }
 
 .primary-button, .secondary-button {
+    background: #3b82f6;
+    color: white;
     width: 300px;
     height: 56px;
     padding: 0 20px;
@@ -79,42 +81,22 @@ h1 {
     overflow: hidden;
 }
 
-.primary-button {
-    background: #3b82f6;
-    color: white;
-}
-
-.primary-button:hover {
+.primary-button:hover, .icon-button:hover {
     background: #2563eb;
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
 }
+
+.primary-button:active, .icon-button:active {
+    transform: translateY(0);
+}
+
 
 .secondary-button {
     background: rgba(255, 255, 255, 0.05);
     color: #94a3b8;
     border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: not-allowed;
-}
-
-.secondary-button:hover {
-    transform: none;
-    box-shadow: none;
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.coming-soon {
-    display: none;
-}
-
-.coming-soon-label {
-    display: block;
-    text-align: center;
-    color: #64748b;
-    font-size: 11px;
-    margin-top: 2px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
 }
 
 .divider {
@@ -223,20 +205,11 @@ input:focus {
     font-weight: 600;
     font-size: 12px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     width: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.icon-button:hover {
-    background: #1d4ed8;
-    transform: translateY(-1px);
-}
-
-.icon-button:active {
-    transform: translateY(0);
 }
 
 .status-message {
@@ -260,36 +233,21 @@ input:focus {
 }
 
 button {
-    background: #4CAF50;
     color: white;
     border: none;
     padding: 12px 24px;
     font-size: 16px;
     border-radius: 6px;
     cursor: pointer;
-    transition: transform 0.1s, background 0.3s;
+    transition: all 0.3s ease;
     margin: 10px;
     text-transform: uppercase;
     letter-spacing: 1px;
     font-weight: 600;
 }
 
-button:hover {
-    background: #45a049;
-    transform: translateY(-2px);
-}
-
 button:active {
     transform: translateY(0);
-}
-
-#status {
-    font-size: 18px;
-    padding: 15px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    margin: 20px 0;
-    transition: all 0.3s;
 }
 
 #gameBoard {
@@ -315,18 +273,6 @@ button:active {
     margin-top: 10px;
 }
 
-/* Add animation for status updates */
-@keyframes statusUpdate {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-    100% { transform: scale(1); }
-}
-
-.status-update {
-    animation: statusUpdate 0.3s ease;
-}
-
-/* Add these new styles */
 .main-menu {
     background: rgba(255, 255, 255, 0.05);
     padding: 40px;
@@ -380,7 +326,6 @@ button:active {
     max-width: 400px;
 }
 
-/* Update join/leave button states */
 #joinLobby.leave-room {
     background: #dc2626;
     border: 1px solid rgba(220, 38, 38, 0.2);
@@ -389,23 +334,12 @@ button:active {
 
 #joinLobby.leave-room:hover {
     background: #b91c1c;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
 }
 
 #joinLobby.leave-room:active {
     transform: translateY(0);
-}
-
-/* Update copy success animation */
-@keyframes copySuccess {
-    0% { background: #059669; }
-    100% { background: #2563eb; }
-}
-
-.copy-success {
-    animation: copySuccess 0.8s ease;
-    min-width: 60px;
-    width: 60px;
 }
 
 .game-container {
@@ -423,7 +357,6 @@ button:active {
     margin-bottom: 20px;
 }
 
-/* Add specific styles for the board squares */
 .square-55d63 {
     float: left;
     position: relative;
@@ -431,14 +364,13 @@ button:active {
     height: 12.5%;
 }
 
-/* Add specific styles for the pieces */
 .piece-417db {
     cursor: pointer;
     position: absolute;
     width: 100%;
     height: 100%;
 }
-/* Make sure the squares are visible */
+
 .white-1e1d7 {
     background-color: #f0d9b5 !important;
 }
@@ -453,9 +385,4 @@ button:active {
 
 .highlight-move {
     box-shadow: inset 0 0 3px 3px rgba(34, 197, 94, 0.4) !important;
-}
-
-/* Add transition for the copy button width */
-#copyCode {
-    transition: width 0.2s ease;
 }
