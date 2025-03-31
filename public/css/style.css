@@ -212,3 +212,197 @@ input:focus {
     border-radius: 12px;
     overflow: hidden;
 }
+
+.room-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.player-indicator {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+/* Add animation for status updates */
+@keyframes statusUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.status-update {
+    animation: statusUpdate 0.3s ease;
+}
+
+/* Add these new styles */
+.main-menu {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 40px;
+    border-radius: 24px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu-button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    font-size: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin: 10px;
+    min-width: 200px;
+}
+
+.menu-button:hover {
+    transform: translateY(-2px);
+    background: #2563eb;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.menu-button:disabled {
+    background: #475569;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.lobby-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    align-items: center;
+}
+
+.join-section {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Update join/leave button states */
+#joinLobby.leave-room {
+    background: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+}
+
+#joinLobby.leave-room:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+
+#joinLobby.leave-room:active {
+    transform: translateY(0);
+}
+
+/* Update copy success animation */
+@keyframes copySuccess {
+    0% { background: #059669; }
+    100% { background: #2563eb; }
+}
+
+.copy-success {
+    animation: copySuccess 0.8s ease;
+    min-width: 60px;
+    width: 60px;
+}
+
+.game-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+#playerIndicator {
+    font-size: 20px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+/* Add specific styles for the board squares */
+.square-55d63 {
+    float: left;
+    position: relative;
+    width: 12.5%;
+    height: 12.5%;
+}
+
+/* Add specific styles for the pieces */
+.piece-417db {
+    cursor: pointer;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+/* Make sure the squares are visible */
+.white-1e1d7 {
+    background-color: #f0d9b5 !important;
+}
+
+.black-3c85d {
+    background-color: #b58863 !important;
+}
+
+.highlight-square {
+    box-shadow: inset 0 0 3px 3px rgba(59, 130, 246, 0.5) !important;
+}
+
+.highlight-move {
+    box-shadow: inset 0 0 3px 3px rgba(34, 197, 94, 0.4) !important;
+}
+
+/* Add transition for the copy button width */
+#copyCode {
+    transition: width 0.2s ease;
+}
+
+.chessboard {
+    display: grid;
+    grid-template-columns: repeat(8, 60px);
+    grid-template-rows: repeat(8, 60px);
+    border: 2px solid black;
+}
+
+.square {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.square.light {
+    background-color: #f0d9b5;
+}
+
+.square.dark {
+    background-color: #b58863;
+}
+
+.piece {
+    width: 50px;
+    height: 50px;
+    pointer-events: none;
+}
+
+.square.highlight {
+    background-color: rgba(0, 255, 0, 0.5); /* Green highlight */
+}

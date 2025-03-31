@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Card Chess - Game</title>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Chess Game</title>
+    <link rel="stylesheet" href="/css/style.css"> <!-- Link to your CSS file -->
 </head>
 <body>
-    <div id="gameBoard"></div>
-    <script src="/js/game.js"></script>
+    <div id="game-container">
+        <!-- Player Information -->
+        <div id="player-info">
+            <h2 id="playerIndicator">Waiting for game to start...</h2>
+        </div>
+
+        <!-- Chessboard -->
+        <div id="gameBoard" class="chessboard"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script> <!-- Include socket.io -->
+    <script src="/js/game.js"></script> <!-- Include your game.js -->
 </body>
 </html>
