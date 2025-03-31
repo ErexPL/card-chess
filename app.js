@@ -1,6 +1,5 @@
 const express = require("express");
 const http = require("http");
-const { v4: uuidv4 } = require("uuid");
 const socketIo = require("socket.io");
 
 const app = express();
@@ -147,7 +146,6 @@ io.on("connection", (socket) => {
             if (index > -1) {
                 rooms[lobbyCode].splice(index, 1);
             }
-
             if (rooms[lobbyCode].length === 0) {
                 delete rooms[lobbyCode];
                 delete gameStates[lobbyCode];

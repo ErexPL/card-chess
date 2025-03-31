@@ -1,7 +1,6 @@
 body {
     font-family: 'Inter', sans-serif;
     background: linear-gradient(135deg, #0f172a, #1e293b);
-    color: #fff;
     min-height: 100vh;
     margin: 0;
     padding: 0;
@@ -10,19 +9,13 @@ body {
     align-items: center;
 }
 
-.container {
-    width: 100%;
-    max-width: 480px;
-    padding: 20px;
-}
-
 .main-menu {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.05);
     padding: 40px;
+    border-radius: 24px;
     backdrop-filter: blur(10px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .menu-header {
@@ -35,7 +28,7 @@ h1 {
     font-weight: 800;
     margin: 0;
     background: linear-gradient(135deg, #60a5fa, #3b82f6);
-    -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 2px 10px rgba(59, 130, 246, 0.5);
 }
@@ -62,9 +55,12 @@ h1 {
     width: 100%;
 }
 
-.primary-button, .secondary-button {
+button {
+    background: #3b82f6;
+    color: white;
     width: 300px;
-    height: 56px;
+    height: 55px;
+    margin: 10px;
     padding: 0 20px;
     display: flex;
     align-items: center;
@@ -77,44 +73,47 @@ h1 {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    letter-spacing: 1px;
 }
 
-.primary-button {
-    background: #3b82f6;
-    color: white;
-}
-
-.primary-button:hover {
+button:hover {
     background: #2563eb;
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
 }
 
-.secondary-button {
+button:active {
+    transform: translateY(0);
+}
+
+button:disabled {
     background: rgba(255, 255, 255, 0.05);
     color: #94a3b8;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    transform: none;
+    box-shadow: none;
     cursor: not-allowed;
 }
 
-.secondary-button:hover {
-    transform: none;
-    box-shadow: none;
-    background: rgba(255, 255, 255, 0.05);
+button.leave-room {
+    background: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
 }
 
-.coming-soon {
-    display: none;
+button.leave-room:hover {
+    background: #b91c1c;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
 }
 
-.coming-soon-label {
-    display: block;
-    text-align: center;
-    color: #64748b;
-    font-size: 11px;
-    margin-top: 2px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
+#copyCode {
+    width: 60px;
+    height: 30px;
+    padding: 0;
+    margin: 0;
+    font-size: 12px;
+    text-transform: uppercase;
 }
 
 .divider {
@@ -135,24 +134,9 @@ h1 {
     margin: 0 16px;
 }
 
-.divider span {
-    margin: 0 10px;
-}
-
 .input-group {
     display: flex;
     gap: 12px;
-}
-
-input {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 16px;
-    color: white;
-    font-size: 16px;
-    width: 100%;
-    transition: all 0.3s ease;
 }
 
 input:focus {
@@ -209,45 +193,8 @@ input:focus {
     cursor: not-allowed;
 }
 
-/* Adjust width when copy button is visible */
 .code-container:has(#copyCode[style*="display: block"]) #lobbyCode {
     width: calc(100% - 80px);
-}
-
-.icon-button {
-    background: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 6px 12px;
-    font-weight: 600;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.icon-button:hover {
-    background: #1d4ed8;
-    transform: translateY(-1px);
-}
-
-.icon-button:active {
-    transform: translateY(0);
-}
-
-.status-message {
-    margin-top: 20px;
-    padding: 16px;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: 12px;
-    text-align: center;
-    color: #60a5fa;
-    font-weight: 500;
 }
 
 .controls {
@@ -257,39 +204,6 @@ input:focus {
     backdrop-filter: blur(10px);
     margin-bottom: 30px;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-}
-
-button {
-    background: #4CAF50;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    font-size: 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: transform 0.1s, background 0.3s;
-    margin: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600;
-}
-
-button:hover {
-    background: #45a049;
-    transform: translateY(-2px);
-}
-
-button:active {
-    transform: translateY(0);
-}
-
-#status {
-    font-size: 18px;
-    padding: 15px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    margin: 20px 0;
-    transition: all 0.3s;
 }
 
 #gameBoard {
