@@ -4,7 +4,6 @@ let game = new Chess();
 let playerColor = 'white';
 let selectedSquare = null;
 
-// Get room ID from URL
 const urlParams = new URLSearchParams(window.location.search);
 const roomId = urlParams.get('room');
 
@@ -12,10 +11,8 @@ if (!roomId) {
     window.location.href = '/';
 }
 
-// Emit join-game when the page loads
 socket.emit('join-game', roomId);
 
-// Handle start-game event
 socket.on('start-game', (data) => {
     console.log('Received start-game event:', data);
     playerColor = data.players[0] === socket.id ? 'white' : 'black';
@@ -34,7 +31,6 @@ socket.on('start-game', (data) => {
     document.getElementById('playerIndicator').textContent = `You are playing as ${playerColor}`;
 });
 
-// Handle opponent moves
 socket.on('opponent-move', ({ source, target, fen }) => {
     console.log('Opponent moved:', source, target, fen);
     game.load(fen);
@@ -43,8 +39,6 @@ socket.on('opponent-move', ({ source, target, fen }) => {
 });
 
 function initializeBoard() {
-    console.log('Initializing board...');
-    
     const config = {
         position: 'start',
         orientation: playerColor,
@@ -55,9 +49,7 @@ function initializeBoard() {
     
     board = Chessboard('gameBoard', config);
     
-    // Wait for a brief moment to ensure squares are created
     setTimeout(() => {
-        // Add click handlers for squares
         $('.square-55d63').off('click').on('click', function() {
             const square = $(this).data('square');
             handleSquareClick(square);
@@ -70,9 +62,6 @@ function initializeBoard() {
 }
 
 function handleSquareClick(square) {
-    console.log('Square clicked:', square);
-    
-    // Check if it's player's turn
     if ((game.turn() === 'w' && playerColor !== 'white') ||
         (game.turn() === 'b' && playerColor !== 'black')) {
         console.log('Not your turn');
@@ -130,7 +119,6 @@ function removeHighlights() {
     $('.square-55d63').removeClass('highlight-square highlight-move');
 }
 
-// Add CSS for highlights with !important to ensure they show up
 const style = document.createElement('style');
 style.textContent = `
     .highlight-square {
@@ -140,4 +128,4 @@ style.textContent = `
         box-shadow: inset 0 0 3px 3px green !important;
     }
 `;
-document.head.appendChild(style); 
+document.head.appendChild(style);
