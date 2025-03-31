@@ -4,27 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Card Chess</title>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Card Chess</h1>
-        <div class="controls">
-            <div class="room-info">
-                <button id="createRoom">Create Room</button>
-                <input type="text" id="roomId" placeholder="Enter Room ID" />
-                <button id="joinRoom">Join Room</button>
+        <div class="main-menu">
+            <div class="menu-header">
+                <h1>Card Chess</h1>
+                <p class="subtitle">The better version of chess</p>
             </div>
-            <p id="status"></p>
-            <div class="player-indicator" id="playerIndicator"></div>
+            <div class="menu-options">
+                <div class="option-group">
+                    <button id="createLobby" class="primary-button">
+                        <span class="button-text">Create Private Room</span>
+                    </button>
+                    <button id="matchmaking" class="secondary-button" disabled>
+                        <span class="button-text">Quick Match</span>
+                    </button>
+                </div>
+                
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+
+                <div class="option-group">
+                    <div class="code-container">
+                        <input type="text" id="lobbyCode" placeholder="Enter room code" maxlength="8" />
+                        <button id="copyCode" class="icon-button" style="display: none;">Copy</button>
+                    </div>
+                    <button id="joinLobby" class="primary-button">
+                        <span class="button-text">Join Room</span>
+                    </button>
+                </div>
+            </div>
         </div>
-        <div id="gameBoard" style="display: none;"></div>
     </div>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="/js/main.js"></script>
 </body>
 </html>

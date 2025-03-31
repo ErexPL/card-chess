@@ -7,7 +7,9 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const rooms = {}; // Store rooms and players
+const rooms = {};
+const gameStates = {};
+const matchmaking = [];
 
 app.use(express.static("public"));
 
@@ -15,37 +17,73 @@ app.get("/", (req, res) => {
     res.sendFile(__dirname + '/views/index.html');
 });
 
+app.get("/game", (req, res) => {
+    res.sendFile(__dirname + '/views/game.html');
+});
+
 io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
 
-    socket.on("create-room", () => {
-        const roomId = uuidv4();
-        rooms[roomId] = [socket.id];
-        socket.join(roomId);
-        socket.emit("room-created", roomId);
-        console.log(`Room ${roomId} created by ${socket.id}`);
-    });
-
-    socket.on("join-room", (roomId) => {
-        // Check if player is already in the room
-        if (rooms[roomId] && rooms[roomId].includes(socket.id)) {
-            socket.emit("join-error", "You cannot join your own room!");
+    socket.on("create-room", (lobbyCode) => {
+        if (rooms[lobbyCode]) {
+            socket.emit("join-error", "Room already exists");
             return;
         }
+        rooms[lobbyCode] = [socket.id];
+        gameStates[lobbyCode] = {
+            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+        };
+        socket.join(lobbyCode);
+        socket.emit("room-created", lobbyCode);
+    });
 
-        if (rooms[roomId] && rooms[roomId].length < 2) {
-            rooms[roomId].push(socket.id);
-            socket.join(roomId);
-            io.to(roomId).emit("player-joined", rooms[roomId]);
-            console.log(`${socket.id} joined room ${roomId}`);
+    socket.on("join-room", (lobbyCode) => {
+        if (!rooms[lobbyCode]) {
+            socket.emit("join-error", "Room not found");
+            return;
+        }
+        
+        if (rooms[lobbyCode].length >= 2) {
+            socket.emit("room-full");
+            return;
+        }
+        
+        if (rooms[lobbyCode].includes(socket.id)) {
+            socket.emit("join-error", "Cannot join your own room");
+            return;
+        }
+        
+        rooms[lobbyCode].push(socket.id);
+        socket.join(lobbyCode);
+        
+        if (rooms[lobbyCode].length === 2) {
+            io.to(lobbyCode).emit("start-game", {
+                roomId: lobbyCode,
+                players: rooms[lobbyCode],
+                currentFen: gameStates[lobbyCode].fen
+            });
         } else {
-            socket.emit("room-full", roomId);
+            socket.emit("join-success", lobbyCode);
+        }
+    });
+
+    socket.on("find-match", () => {
+        if (matchmaking.includes(socket.id)) return;
+        
+        if (matchmaking.length > 0) {
+            const opponent = matchmaking.shift();
+            const roomId = generateLobbyCode();
+            rooms[roomId] = [opponent, socket.id];
+            io.to(opponent).emit("join-success", roomId);
+            socket.emit("join-success", roomId);
+        } else {
+            matchmaking.push(socket.id);
         }
     });
 
     socket.on("move", ({ source, target, roomId, fen }) => {
         if (rooms[roomId]) {
-            io.in(roomId).emit("opponent-move", { source, target, fen });
+            socket.to(roomId).emit("opponent-move", { source, target, fen });
             console.log(`Move from ${source} to ${target} in room ${roomId}`);
         }
     });
@@ -59,7 +97,66 @@ io.on("connection", (socket) => {
         }
         console.log("A user disconnected:", socket.id);
     });
+
+    // Add this handler for reconnection attempts
+    socket.on("rejoin-game", (roomId) => {
+        if (rooms[roomId] && rooms[roomId].includes(socket.id)) {
+            socket.join(roomId);
+            io.to(roomId).emit("start-game", {
+                roomId: roomId,
+                players: rooms[roomId]
+            });
+        }
+    });
+
+    // Update the join-game handler
+    socket.on("join-game", (roomId) => {
+        console.log(`Player ${socket.id} joining game in room ${roomId}`);
+        if (!rooms[roomId]) {
+            console.log('Room not found, creating new room:', roomId);
+            rooms[roomId] = [];
+            gameStates[roomId] = {
+                fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+            };
+        }
+        
+        if (!rooms[roomId].includes(socket.id)) {
+            rooms[roomId].push(socket.id);
+        }
+        
+        socket.join(roomId);
+        io.to(roomId).emit("start-game", {
+            roomId: roomId,
+            players: rooms[roomId],
+            currentFen: gameStates[roomId].fen
+        });
+        console.log('Emitted start-game event for room:', roomId, 'players:', rooms[roomId]);
+    });
+
+    socket.on('leave-room', (lobbyCode) => {
+        if (rooms[lobbyCode]) {
+            // Remove the player from the room
+            const index = rooms[lobbyCode].indexOf(socket.id);
+            if (index > -1) {
+                rooms[lobbyCode].splice(index, 1);
+            }
+            
+            // If room is empty, delete it
+            if (rooms[lobbyCode].length === 0) {
+                delete rooms[lobbyCode];
+                delete gameStates[lobbyCode];
+            }
+            
+            socket.leave(lobbyCode);
+            socket.emit('room-left');
+        }
+    });
 });
+
+function generateLobbyCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    return Array.from({length: 8}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+}
 
 server.listen(3000, () => {
     console.log("Server running on http://localhost:3000");
