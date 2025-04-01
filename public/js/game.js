@@ -154,6 +154,53 @@ class Board {
         return this.grid[rank][file];
     }
 
+    getLinearMoves(position, pieceColor, directions) {
+        const moves = [];
+        const [file, rank] = position.split('');
+        const fileIndex = file.charCodeAt(0) - 'a'.charCodeAt(0);
+        const rankIndex = parseInt(rank) - 1;
+        
+        const directionVectors = {
+            'up': [0, 1],
+            'down': [0, -1],
+            'left': [-1, 0],
+            'right': [1, 0],
+            'up-left': [-1, 1],
+            'up-right': [1, 1],
+            'down-left': [-1, -1],
+            'down-right': [1, -1]
+        };
+
+        directions.forEach(direction => {
+            const [dx, dy] = directionVectors[direction];
+            let currentFile = fileIndex;
+            let currentRank = rankIndex;
+
+            while (true) {
+                currentFile += dx;
+                currentRank += dy;
+
+                if (currentFile < 0 || currentFile > 7 || currentRank < 0 || currentRank > 7) {
+                    break;
+                }
+
+                const newPosition = String.fromCharCode('a'.charCodeAt(0) + currentFile) + (currentRank + 1);
+                const pieceAtPosition = this.getPiece(newPosition);
+
+                if (!pieceAtPosition) {
+                    moves.push(newPosition);
+                } else {
+                    if (pieceAtPosition.color !== pieceColor) {
+                        moves.push(newPosition);
+                    }
+                    break;
+                }
+            }
+        });
+
+        return moves;
+    }
+
     movePiece(from, to) {
         const [fromRank, fromFile] = this.positionToIndices(from);
         const [toRank, toFile] = this.positionToIndices(to);
@@ -277,41 +324,48 @@ class Board {
     }
 }
 
-function handleSquareClick(position, board) {
-    const piece = board.getPiece(position);
+function isPlayerTurn() {
+    return playerColor === currentTurn;
+}
 
-    if (currentTurn !== playerColor) {
-        alert("It's not your turn!");
+function handleSquareClick(position, board) {
+    if (!isPlayerTurn()) {
         return;
     }
 
-    if (selectedPiece && highlightedSquares.includes(position)) {
-        const from = selectedPiece.position;
-        const to = position;
+    const piece = board.getPiece(position);
 
-        board.movePiece(from, to);
+    if (selectedPiece) {
+        if (highlightedSquares.includes(position)) {
+            const oldPosition = selectedPiece.position;
+            
+            board.movePiece(oldPosition, position);
+            
+            currentTurn = currentTurn === 'white' ? 'black' : 'white';
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room');
+            
+            socket.emit('move', {
+                source: oldPosition,
+                target: position,
+                roomId: roomId,
+                fen: board.generateFEN()
+            });
+            
+            selectedPiece = null;
+            clearHighlights();
+            updateBoard(board);
+            return;
+        }
+        
         selectedPiece = null;
         clearHighlights();
-        updateBoard(board);
-
-        const fen = board.generateFEN();
-        socket.emit('move', { source: from, target: to, roomId, fen });
-
-        return;
     }
 
     if (piece && piece.color === playerColor) {
-        if (selectedPiece === piece) {
-            selectedPiece = null;
-            clearHighlights();
-        } else {
-            selectedPiece = piece;
-            clearHighlights();
-            highlightMoves(piece, board);
-        }
-    } else {
-        selectedPiece = null;
-        clearHighlights();
+        selectedPiece = piece;
+        highlightMoves(piece, board);
     }
 }
 
@@ -394,7 +448,6 @@ const roomId = new URLSearchParams(window.location.search).get('room');
 socket.emit('join-game', roomId);
 
 socket.on('game-state', (data) => {
-    console.log('Game state received:', data);
     playerColor = data.playerColor;
     currentTurn = data.currentTurn;
 
@@ -403,7 +456,6 @@ socket.on('game-state', (data) => {
 });
 
 socket.on('start-game', (data) => {
-    console.log('Game started:', data);
     playerColor = data.players[0] === socket.id ? 'white' : 'black';
     currentTurn = data.currentTurn;
 
@@ -412,10 +464,8 @@ socket.on('start-game', (data) => {
 });
 
 socket.on('opponent-move', ({ source, target, fen }) => {
-    console.log(`Opponent moved from ${source} to ${target}`);
-    board.movePiece(source, target);
-    currentTurn = currentTurn === 'white' ? 'black' : 'white';
     board.loadFromFEN(fen);
+    currentTurn = currentTurn === 'white' ? 'black' : 'white';
     updateBoard(board);
 });
 

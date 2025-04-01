@@ -344,38 +344,6 @@ input:focus {
     margin-bottom: 20px;
 }
 
-/* Add specific styles for the board squares */
-.square-55d63 {
-    float: left;
-    position: relative;
-    width: 12.5%;
-    height: 12.5%;
-}
-
-/* Add specific styles for the pieces */
-.piece-417db {
-    cursor: pointer;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-}
-/* Make sure the squares are visible */
-.white-1e1d7 {
-    background-color: #f0d9b5 !important;
-}
-
-.black-3c85d {
-    background-color: #b58863 !important;
-}
-
-.highlight-square {
-    box-shadow: inset 0 0 3px 3px rgba(59, 130, 246, 0.5) !important;
-}
-
-.highlight-move {
-    box-shadow: inset 0 0 3px 3px rgba(34, 197, 94, 0.4) !important;
-}
-
 .square {
     width: 60px;
     height: 60px;
@@ -398,6 +366,12 @@ input:focus {
     pointer-events: none;
 }
 
-.square.highlight {
-    background-color: rgba(0, 255, 0, 0.5); /* Green highlight */
+.highlight::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.15);
+    pointer-events: none;
 }
