@@ -398,7 +398,6 @@ socket.on('game-state', (data) => {
     playerColor = data.playerColor;
     currentTurn = data.currentTurn;
 
-    document.getElementById('playerIndicator').textContent = `You are playing as ${playerColor}`;
     board.loadFromFEN(data.currentFen);
     updateBoard(board);
 });
@@ -408,7 +407,6 @@ socket.on('start-game', (data) => {
     playerColor = data.players[0] === socket.id ? 'white' : 'black';
     currentTurn = data.currentTurn;
 
-    document.getElementById('playerIndicator').textContent = `You are playing as ${playerColor}`;
     board.loadFromFEN(data.currentFen);
     updateBoard(board);
 });
