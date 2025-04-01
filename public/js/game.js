@@ -1,16 +1,15 @@
-const socket = io(); // Initialize socket.io connection
+const socket = io();
 let selectedPiece = null;
 let highlightedSquares = [];
-let playerColor = null; // Track the player's color
-let currentTurn = 'white'; // Track whose turn it is
+let playerColor = null;
+let currentTurn = 'white';
 
 class ChessPiece {
     constructor(color, position) {
-        this.color = color; // 'white' or 'black'
-        this.position = position; // e.g., 'e4'
+        this.color = color;
+        this.position = position;
     }
 
-    // Abstract method to get possible moves (to be overridden by subclasses)
     getPossibleMoves(board) {
         throw new Error("getPossibleMoves() must be implemented in subclasses");
     }
@@ -20,7 +19,6 @@ class ChessPiece {
     }
 }
 
-// Pawn class
 class Pawn extends ChessPiece {
     getPossibleMoves(board) {
         const moves = [];
@@ -28,13 +26,11 @@ class Pawn extends ChessPiece {
         const [file, rank] = this.position.split('');
         const newRank = parseInt(rank) + direction;
 
-        // Forward move
         const forward = file + newRank;
         if (!board.getPiece(forward)) {
             moves.push(forward);
         }
 
-        // Capture moves
         const captureLeft = String.fromCharCode(file.charCodeAt(0) - 1) + newRank;
         const captureRight = String.fromCharCode(file.charCodeAt(0) + 1) + newRank;
 
@@ -49,14 +45,12 @@ class Pawn extends ChessPiece {
     }
 }
 
-// Rook class
 class Rook extends ChessPiece {
     getPossibleMoves(board) {
         return board.getLinearMoves(this.position, this.color, ['up', 'down', 'left', 'right']);
     }
 }
 
-// Knight class
 class Knight extends ChessPiece {
     getPossibleMoves(board) {
         const moves = [];
@@ -80,14 +74,12 @@ class Knight extends ChessPiece {
     }
 }
 
-// Bishop class
 class Bishop extends ChessPiece {
     getPossibleMoves(board) {
         return board.getLinearMoves(this.position, this.color, ['up-left', 'up-right', 'down-left', 'down-right']);
     }
 }
 
-// Queen class
 class Queen extends ChessPiece {
     getPossibleMoves(board) {
         return board.getLinearMoves(this.position, this.color, [
@@ -97,7 +89,6 @@ class Queen extends ChessPiece {
     }
 }
 
-// King class
 class King extends ChessPiece {
     getPossibleMoves(board) {
         const moves = [];
@@ -126,52 +117,43 @@ class Board {
         this.grid = this.initializeBoard();
     }
 
-    // Initialize the board with pieces in their starting positions
     initializeBoard() {
         const grid = Array(8).fill(null).map(() => Array(8).fill(null));
 
-        // Place pawns
         for (let file = 0; file < 8; file++) {
             grid[6][file] = new Pawn('white', String.fromCharCode('a'.charCodeAt(0) + file) + '2');
             grid[1][file] = new Pawn('black', String.fromCharCode('a'.charCodeAt(0) + file) + '7');
         }
 
-        // Place rooks
         grid[7][0] = new Rook('white', 'a1');
         grid[7][7] = new Rook('white', 'h1');
         grid[0][0] = new Rook('black', 'a8');
         grid[0][7] = new Rook('black', 'h8');
 
-        // Place knights
         grid[7][1] = new Knight('white', 'b1');
         grid[7][6] = new Knight('white', 'g1');
         grid[0][1] = new Knight('black', 'b8');
         grid[0][6] = new Knight('black', 'g8');
 
-        // Place bishops
         grid[7][2] = new Bishop('white', 'c1');
         grid[7][5] = new Bishop('white', 'f1');
         grid[0][2] = new Bishop('black', 'c8');
         grid[0][5] = new Bishop('black', 'f8');
 
-        // Place queens
         grid[7][3] = new Queen('white', 'd1');
         grid[0][3] = new Queen('black', 'd8');
 
-        // Place kings
         grid[7][4] = new King('white', 'e1');
         grid[0][4] = new King('black', 'e8');
 
         return grid;
     }
 
-    // Get the piece at a specific position (e.g., 'e4')
     getPiece(position) {
         const [rank, file] = this.positionToIndices(position);
         return this.grid[rank][file];
     }
 
-    // Move a piece from one position to another
     movePiece(from, to) {
         const [fromRank, fromFile] = this.positionToIndices(from);
         const [toRank, toFile] = this.positionToIndices(to);
@@ -181,35 +163,29 @@ class Board {
             throw new Error(`No piece at position ${from}`);
         }
 
-        // Update the piece's position
         piece.move(to);
 
-        // Move the piece on the board
         this.grid[toRank][toFile] = piece;
         this.grid[fromRank][fromFile] = null;
     }
 
-    // Check if a square is valid (within bounds)
     isValidSquare(position) {
         const [rank, file] = this.positionToIndices(position);
         return rank >= 0 && rank < 8 && file >= 0 && file < 8;
     }
 
-    // Convert position (e.g., 'e4') to grid indices
     positionToIndices(position) {
         const file = position.charCodeAt(0) - 'a'.charCodeAt(0);
         const rank = 8 - parseInt(position[1]);
         return [rank, file];
     }
 
-    // Convert grid indices to position (e.g., [4, 4] -> 'e4')
     indicesToPosition(rank, file) {
         const fileChar = String.fromCharCode('a'.charCodeAt(0) + file);
         const rankChar = (8 - rank).toString();
         return fileChar + rankChar;
     }
 
-    // Generate FEN string from the current board state
     generateFEN() {
         let fen = '';
 
@@ -241,13 +217,11 @@ class Board {
             }
         }
 
-        // Add default FEN metadata (active color, castling, etc.)
-        fen += ` ${currentTurn} - - 0 1`; // Default values for simplicity
+        fen += ` ${currentTurn} - - 0 1`;
 
         return fen;
     }
 
-    // Helper function to get FEN character for a piece
     getPieceChar(piece) {
         const charMap = {
             Pawn: 'p',
@@ -262,7 +236,6 @@ class Board {
         return piece.color === 'white' ? char.toUpperCase() : char;
     }
 
-    // Load the board state from a FEN string
     loadFromFEN(fen) {
         const rows = fen.split(' ')[0].split('/');
         this.grid = Array(8).fill(null).map(() => Array(8).fill(null));
@@ -297,93 +270,80 @@ class Board {
                     }
                     file++;
                 } else {
-                    file += parseInt(char); // Skip empty squares
+                    file += parseInt(char);
                 }
             }
         });
     }
 }
 
-// Handle square click
 function handleSquareClick(position, board) {
     const piece = board.getPiece(position);
 
-    // If it's not the player's turn, ignore the click
     if (currentTurn !== playerColor) {
         alert("It's not your turn!");
         return;
     }
 
-    // If a piece is selected and the clicked square is a valid move
     if (selectedPiece && highlightedSquares.includes(position)) {
         const from = selectedPiece.position;
         const to = position;
 
-        // Move the piece locally
         board.movePiece(from, to);
         selectedPiece = null;
         clearHighlights();
         updateBoard(board);
 
-        // Emit the move to the server
         const fen = board.generateFEN();
         socket.emit('move', { source: from, target: to, roomId, fen });
 
         return;
     }
 
-    // If a piece is clicked, select it and highlight its possible moves
     if (piece && piece.color === playerColor) {
         if (selectedPiece === piece) {
-            // If the same piece is clicked again, deselect it
             selectedPiece = null;
             clearHighlights();
         } else {
-            // Select the new piece
             selectedPiece = piece;
             clearHighlights();
             highlightMoves(piece, board);
         }
     } else {
-        // If an empty square is clicked, clear selection
         selectedPiece = null;
         clearHighlights();
     }
 }
 
-// Highlight possible moves for a piece
 function highlightMoves(piece, board) {
-    const possibleMoves = piece.getPossibleMoves(board); // Get possible moves
+    const possibleMoves = piece.getPossibleMoves(board);
     highlightedSquares = possibleMoves;
 
     possibleMoves.forEach((move) => {
         const square = document.querySelector(`[data-position="${move}"]`);
         if (square) {
-            square.classList.add('highlight'); // Highlight the square
+            square.classList.add('highlight');
         }
     });
 }
 
-// Clear all highlights
 function clearHighlights() {
     highlightedSquares.forEach((move) => {
         const square = document.querySelector(`[data-position="${move}"]`);
         if (square) {
-            square.classList.remove('highlight'); // Remove highlight
+            square.classList.remove('highlight');
         }
     });
     highlightedSquares = [];
 }
 
-// Update the board after a move
 function updateBoard(board) {
     const gameBoard = document.getElementById('gameBoard');
-    gameBoard.innerHTML = ''; // Clear the current board
+    gameBoard.innerHTML = '';
     const boardHTML = generateBoardHTML(board);
     gameBoard.appendChild(boardHTML);
 }
 
-// Generate the board HTML
 function generateBoardHTML(board) {
     const boardContainer = document.createElement('div');
     boardContainer.className = 'chessboard';
@@ -396,16 +356,14 @@ function generateBoardHTML(board) {
             const position = board.indicesToPosition(rank, file);
             square.dataset.position = position;
 
-            // Add click event directly to the square
             square.onclick = () => handleSquareClick(position, board);
-
-            // Get the piece at the current position
+            
             const piece = board.grid[rank][file];
             if (piece) {
                 const pieceElement = document.createElement('img');
                 pieceElement.className = `piece`;
                 pieceElement.src = getPieceSVGPath(piece);
-                pieceElement.draggable = false; // Disable default drag behavior
+                pieceElement.draggable = false;
                 square.appendChild(pieceElement);
             }
 
@@ -416,7 +374,6 @@ function generateBoardHTML(board) {
     return boardContainer;
 }
 
-// Helper function to get the SVG path for a piece
 function getPieceSVGPath(piece) {
     const pieceMap = {
         Pawn: 'pawn',
@@ -432,44 +389,38 @@ function getPieceSVGPath(piece) {
     return `/svgs/${pieceName}-${color}.svg`;
 }
 
-// Initialize the board and add it to the DOM
 const board = new Board();
-const roomId = new URLSearchParams(window.location.search).get('room'); // Get room ID from URL
+const roomId = new URLSearchParams(window.location.search).get('room');
 socket.emit('join-game', roomId);
 
-// Listen for the current game state
-// Listen for the current game state
 socket.on('game-state', (data) => {
-    console.log('Game state received:', data); // Debugging: Log the received data
-    playerColor = data.playerColor; // Set the player's color from the server
+    console.log('Game state received:', data);
+    playerColor = data.playerColor;
     currentTurn = data.currentTurn;
 
     document.getElementById('playerIndicator').textContent = `You are playing as ${playerColor}`;
-    board.loadFromFEN(data.currentFen); // Load the board state from the FEN string
+    board.loadFromFEN(data.currentFen);
     updateBoard(board);
 });
 
-// Listen for game start
 socket.on('start-game', (data) => {
     console.log('Game started:', data);
     playerColor = data.players[0] === socket.id ? 'white' : 'black';
     currentTurn = data.currentTurn;
 
     document.getElementById('playerIndicator').textContent = `You are playing as ${playerColor}`;
-    board.loadFromFEN(data.currentFen); // Load the board state from the FEN string
+    board.loadFromFEN(data.currentFen);
     updateBoard(board);
 });
 
-// Listen for opponent's move
 socket.on('opponent-move', ({ source, target, fen }) => {
     console.log(`Opponent moved from ${source} to ${target}`);
     board.movePiece(source, target);
     currentTurn = currentTurn === 'white' ? 'black' : 'white';
-    board.loadFromFEN(fen); // Update the board state from the FEN string
+    board.loadFromFEN(fen);
     updateBoard(board);
 });
 
-// Listen for move errors
 socket.on('move-error', (message) => {
     alert(message);
 });
