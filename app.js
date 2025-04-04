@@ -100,19 +100,23 @@ io.on("connection", (socket) => {
             socket.emit("move-error", "Room not found");
             return;
         }
-
+    
         const gameState = gameStates[roomId];
         const currentPlayer = rooms[roomId].indexOf(socket.id) === 0 ? 'white' : 'black';
-
+    
+        // Enforce turn-based gameplay
         if (gameState.currentTurn !== currentPlayer) {
             socket.emit("move-error", "Not your turn");
             return;
         }
-
+    
+        // Update the game state
         gameState.fen = fen;
         gameState.currentTurn = gameState.currentTurn === 'white' ? 'black' : 'white';
-
-        socket.to(roomId).emit("opponent-move", { source, target, fen });
+        gameState.lastMove = [source, target]; // Update the last move globally
+    
+        // Broadcast the move to the other player
+        socket.to(roomId).emit("opponent-move", { source, target, fen, lastMove: gameState.lastMove });
         console.log(`Move from ${source} to ${target} in room ${roomId}`);
     });
 

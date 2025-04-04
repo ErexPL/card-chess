@@ -20,25 +20,55 @@ class ChessPiece {
 }
 
 class Pawn extends ChessPiece {
-    getPossibleMoves(board) {
+    getPossibleMoves(board, lastMove) {
         const moves = [];
         const direction = this.color === 'white' ? 1 : -1;
-        const [file, rank] = this.position.split('');
-        const newRank = parseInt(rank) + direction;
+        const file = this.position[0];
+        const rank = parseInt(this.position[1]);
+        const newRank = rank + direction;
 
+        // Forward move
         const forward = file + newRank;
         if (!board.getPiece(forward)) {
             moves.push(forward);
         }
 
+        // Double forward move (only from starting position)
+        if (rank === 2 && this.color === 'white' && !board.getPiece(file + '4')) {
+            moves.push(file + '4');
+        }
+        if (rank === 7 && this.color === 'black' && !board.getPiece(file + '5')) {
+            moves.push(file + '5');
+        }
+
+        // Capture moves
         const captureLeft = String.fromCharCode(file.charCodeAt(0) - 1) + newRank;
         const captureRight = String.fromCharCode(file.charCodeAt(0) + 1) + newRank;
 
-        if (board.getPiece(captureLeft)?.color !== this.color) {
+        if (board.getPiece(captureLeft)?.color !== this.color && board.getPiece(captureLeft)) {
             moves.push(captureLeft);
         }
-        if (board.getPiece(captureRight)?.color !== this.color) {
+        if (board.getPiece(captureRight)?.color !== this.color && board.getPiece(captureRight)) {
             moves.push(captureRight);
+        }
+
+        // En passant
+        if (lastMove) {
+            const [lastFrom, lastTo] = lastMove;
+            const lastPiece = board.getPiece(lastTo);
+
+            if (lastPiece instanceof Pawn && Math.abs(parseInt(lastFrom[1]) - parseInt(lastTo[1])) === 2 && rank == lastTo[1]) {
+                const enPassantRank = this.color === 'white' ? 5 : 4;
+                const enPassantLeft = String.fromCharCode(file.charCodeAt(0) - 1) + enPassantRank;
+                const enPassantRight = String.fromCharCode(file.charCodeAt(0) + 1) + enPassantRank;
+
+                if (lastTo === enPassantLeft) {
+                    moves.push(String.fromCharCode(file.charCodeAt(0) - 1) + newRank);
+                }
+                if (lastTo === enPassantRight) {
+                    moves.push(String.fromCharCode(file.charCodeAt(0) + 1) + newRank);
+                }
+            }
         }
 
         return moves;
@@ -114,52 +144,203 @@ class King extends ChessPiece {
 
 class Board {
     constructor() {
-        this.grid = this.initializeBoard();
+        this.grid = this.initializeBoard(); // Initialize the board with pieces
+        this.lastMove = null; // Track the last move for en passant and other rules
     }
 
+    // Initialize the board with the starting positions of all pieces
     initializeBoard() {
         const grid = Array(8).fill(null).map(() => Array(8).fill(null));
 
+        // Place pawns
         for (let file = 0; file < 8; file++) {
             grid[6][file] = new Pawn('white', String.fromCharCode('a'.charCodeAt(0) + file) + '2');
             grid[1][file] = new Pawn('black', String.fromCharCode('a'.charCodeAt(0) + file) + '7');
         }
 
+        // Place rooks
         grid[7][0] = new Rook('white', 'a1');
         grid[7][7] = new Rook('white', 'h1');
         grid[0][0] = new Rook('black', 'a8');
         grid[0][7] = new Rook('black', 'h8');
 
+        // Place knights
         grid[7][1] = new Knight('white', 'b1');
         grid[7][6] = new Knight('white', 'g1');
         grid[0][1] = new Knight('black', 'b8');
         grid[0][6] = new Knight('black', 'g8');
 
+        // Place bishops
         grid[7][2] = new Bishop('white', 'c1');
         grid[7][5] = new Bishop('white', 'f1');
         grid[0][2] = new Bishop('black', 'c8');
         grid[0][5] = new Bishop('black', 'f8');
 
+        // Place queens
         grid[7][3] = new Queen('white', 'd1');
         grid[0][3] = new Queen('black', 'd8');
 
+        // Place kings
         grid[7][4] = new King('white', 'e1');
         grid[0][4] = new King('black', 'e8');
 
         return grid;
     }
 
+    // Get the piece at a specific position (e.g., 'e4')
     getPiece(position) {
         const [rank, file] = this.positionToIndices(position);
         return this.grid[rank][file];
     }
 
+    // Move a piece from one position to another
+    movePiece(from, to) {
+        const [fromRank, fromFile] = this.positionToIndices(from);
+        const [toRank, toFile] = this.positionToIndices(to);
+    
+        const piece = this.grid[fromRank][fromFile];
+        if (!piece) {
+            throw new Error(`No piece at position ${from}`);
+        }
+    
+        // Handle en passant
+        if (piece instanceof Pawn && Math.abs(fromFile - toFile) === 1 && !this.grid[toRank][toFile]) {
+            // En passant capture
+            const capturedPawnRank = piece.color === 'white' ? toRank + 1 : toRank - 1;
+            this.grid[capturedPawnRank][toFile] = null; // Remove the captured pawn
+        }
+    
+        // Update the piece's position
+        piece.move(to);
+    
+        // Move the piece on the board
+        this.grid[toRank][toFile] = piece;
+        this.grid[fromRank][fromFile] = null;
+    
+        // Update the last move
+        this.lastMove = [from, to];
+    }
+
+    // Check if a square is valid (within bounds)
+    isValidSquare(position) {
+        const [rank, file] = this.positionToIndices(position);
+        return rank >= 0 && rank < 8 && file >= 0 && file < 8;
+    }
+
+    // Convert position (e.g., 'e4') to grid indices
+    positionToIndices(position) {
+        const file = position.charCodeAt(0) - 'a'.charCodeAt(0);
+        const rank = 8 - parseInt(position[1]);
+        return [rank, file];
+    }
+
+    // Convert grid indices to position (e.g., [4, 4] -> 'e4')
+    indicesToPosition(rank, file) {
+        const fileChar = String.fromCharCode('a'.charCodeAt(0) + file);
+        const rankChar = (8 - rank).toString();
+        return fileChar + rankChar;
+    }
+
+    // Generate FEN string from the current board state
+    generateFEN() {
+        let fen = '';
+
+        for (let rank = 0; rank < 8; rank++) {
+            let emptyCount = 0;
+
+            for (let file = 0; file < 8; file++) {
+                const piece = this.grid[rank][file];
+
+                if (piece) {
+                    if (emptyCount > 0) {
+                        fen += emptyCount;
+                        emptyCount = 0;
+                    }
+
+                    const pieceChar = this.getPieceChar(piece);
+                    fen += pieceChar;
+                } else {
+                    emptyCount++;
+                }
+            }
+
+            if (emptyCount > 0) {
+                fen += emptyCount;
+            }
+
+            if (rank < 7) {
+                fen += '/';
+            }
+        }
+
+        fen += ` ${currentTurn} - - 0 1`; // Default FEN metadata for simplicity
+
+        return fen;
+    }
+
+    // Helper function to get FEN character for a piece
+    getPieceChar(piece) {
+        const charMap = {
+            Pawn: 'p',
+            Rook: 'r',
+            Knight: 'n',
+            Bishop: 'b',
+            Queen: 'q',
+            King: 'k',
+        };
+
+        const char = charMap[piece.constructor.name];
+        return piece.color === 'white' ? char.toUpperCase() : char;
+    }
+
+    // Load the board state from a FEN string
+    loadFromFEN(fen) {
+        const rows = fen.split(' ')[0].split('/');
+        this.grid = Array(8).fill(null).map(() => Array(8).fill(null));
+
+        rows.forEach((row, rank) => {
+            let file = 0;
+            for (const char of row) {
+                if (isNaN(char)) {
+                    const color = char === char.toUpperCase() ? 'white' : 'black';
+                    const type = char.toLowerCase();
+                    const position = this.indicesToPosition(rank, file);
+
+                    switch (type) {
+                        case 'p':
+                            this.grid[rank][file] = new Pawn(color, position);
+                            break;
+                        case 'r':
+                            this.grid[rank][file] = new Rook(color, position);
+                            break;
+                        case 'n':
+                            this.grid[rank][file] = new Knight(color, position);
+                            break;
+                        case 'b':
+                            this.grid[rank][file] = new Bishop(color, position);
+                            break;
+                        case 'q':
+                            this.grid[rank][file] = new Queen(color, position);
+                            break;
+                        case 'k':
+                            this.grid[rank][file] = new King(color, position);
+                            break;
+                    }
+                    file++;
+                } else {
+                    file += parseInt(char); // Skip empty squares
+                }
+            }
+        });
+    }
+
+    // Get all possible linear moves for a piece (used by Rook, Bishop, Queen)
     getLinearMoves(position, pieceColor, directions) {
         const moves = [];
         const [file, rank] = position.split('');
         const fileIndex = file.charCodeAt(0) - 'a'.charCodeAt(0);
         const rankIndex = parseInt(rank) - 1;
-        
+
         const directionVectors = {
             'up': [0, 1],
             'down': [0, -1],
@@ -199,128 +380,6 @@ class Board {
         });
 
         return moves;
-    }
-
-    movePiece(from, to) {
-        const [fromRank, fromFile] = this.positionToIndices(from);
-        const [toRank, toFile] = this.positionToIndices(to);
-
-        const piece = this.grid[fromRank][fromFile];
-        if (!piece) {
-            throw new Error(`No piece at position ${from}`);
-        }
-
-        piece.move(to);
-
-        this.grid[toRank][toFile] = piece;
-        this.grid[fromRank][fromFile] = null;
-    }
-
-    isValidSquare(position) {
-        const [rank, file] = this.positionToIndices(position);
-        return rank >= 0 && rank < 8 && file >= 0 && file < 8;
-    }
-
-    positionToIndices(position) {
-        const file = position.charCodeAt(0) - 'a'.charCodeAt(0);
-        const rank = 8 - parseInt(position[1]);
-        return [rank, file];
-    }
-
-    indicesToPosition(rank, file) {
-        const fileChar = String.fromCharCode('a'.charCodeAt(0) + file);
-        const rankChar = (8 - rank).toString();
-        return fileChar + rankChar;
-    }
-
-    generateFEN() {
-        let fen = '';
-
-        for (let rank = 0; rank < 8; rank++) {
-            let emptyCount = 0;
-
-            for (let file = 0; file < 8; file++) {
-                const piece = this.grid[rank][file];
-
-                if (piece) {
-                    if (emptyCount > 0) {
-                        fen += emptyCount;
-                        emptyCount = 0;
-                    }
-
-                    const pieceChar = this.getPieceChar(piece);
-                    fen += pieceChar;
-                } else {
-                    emptyCount++;
-                }
-            }
-
-            if (emptyCount > 0) {
-                fen += emptyCount;
-            }
-
-            if (rank < 7) {
-                fen += '/';
-            }
-        }
-
-        fen += ` ${currentTurn} - - 0 1`;
-
-        return fen;
-    }
-
-    getPieceChar(piece) {
-        const charMap = {
-            Pawn: 'p',
-            Rook: 'r',
-            Knight: 'n',
-            Bishop: 'b',
-            Queen: 'q',
-            King: 'k',
-        };
-
-        const char = charMap[piece.constructor.name];
-        return piece.color === 'white' ? char.toUpperCase() : char;
-    }
-
-    loadFromFEN(fen) {
-        const rows = fen.split(' ')[0].split('/');
-        this.grid = Array(8).fill(null).map(() => Array(8).fill(null));
-
-        rows.forEach((row, rank) => {
-            let file = 0;
-            for (const char of row) {
-                if (isNaN(char)) {
-                    const color = char === char.toUpperCase() ? 'white' : 'black';
-                    const type = char.toLowerCase();
-                    const position = this.indicesToPosition(rank, file);
-
-                    switch (type) {
-                        case 'p':
-                            this.grid[rank][file] = new Pawn(color, position);
-                            break;
-                        case 'r':
-                            this.grid[rank][file] = new Rook(color, position);
-                            break;
-                        case 'n':
-                            this.grid[rank][file] = new Knight(color, position);
-                            break;
-                        case 'b':
-                            this.grid[rank][file] = new Bishop(color, position);
-                            break;
-                        case 'q':
-                            this.grid[rank][file] = new Queen(color, position);
-                            break;
-                        case 'k':
-                            this.grid[rank][file] = new King(color, position);
-                            break;
-                    }
-                    file++;
-                } else {
-                    file += parseInt(char);
-                }
-            }
-        });
     }
 }
 
@@ -370,7 +429,7 @@ function handleSquareClick(position, board) {
 }
 
 function highlightMoves(piece, board) {
-    const possibleMoves = piece.getPossibleMoves(board);
+    const possibleMoves = piece.getPossibleMoves(board, board.lastMove); // Pass lastMove
     highlightedSquares = possibleMoves;
 
     possibleMoves.forEach((move) => {
@@ -463,8 +522,9 @@ socket.on('start-game', (data) => {
     updateBoard(board);
 });
 
-socket.on('opponent-move', ({ source, target, fen }) => {
+socket.on('opponent-move', ({ source, target, fen, lastMove }) => {
     board.loadFromFEN(fen);
+    board.lastMove = lastMove; // Update the board's lastMove globally
     currentTurn = currentTurn === 'white' ? 'black' : 'white';
     updateBoard(board);
 });
